@@ -8,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:quiet/model/playlist_detail.dart';
 import 'package:quiet/pages/comments/page_comment.dart';
 import 'package:quiet/part/part.dart';
+import 'package:quiet/unlock/unlock_server.dart';
 
 import 'local_cache_data.dart';
 
@@ -226,24 +227,29 @@ class NeteaseRepository {
 
   ///check music is available
   Future<bool> checkMusic(int id) async {
-    var result = await doRequest("https://music.163.com/weapi/song/enhance/player/url", {"ids": "[$id]", "br": 999000});
-    return result.isValue && result.asValue.value["data"][0]["code"] == 200;
+    return Future.value(true);
+    //var result = await doRequest("https://music.163.com/weapi/song/enhance/player/url", {"ids": "[$id]", "br": 999000});
+    //return result.isValue && result.asValue.value["data"][0]["code"] == 200;
   }
 
   Future<Result<String>> getPlayUrl(int id, [int br = 320000]) async {
     final result = await doRequest("/song/url", {"id": id, "br": br});
+    final data = result.asValue.value['data'] as List;
+    var matchUrl;
+    if (data.isEmpty || data.first['url'] == null) {
+      matchUrl = (await UnlockServer.match(id)).url;
+    }
     return _map(result, (result) {
-      final data = result['data'] as List;
-      if (data.isEmpty) {
+      if (data.isEmpty && matchUrl) {
         throw "无法获取播放地址";
       }
-      return data.first['url'];
+      return matchUrl ?? data.first['url'];
     });
   }
 
   ///fetch music detail from id
   Future<Result<Map<String, Object>>> getMusicDetail(int id) async {
-    final result = await doRequest("https://music.163.com/weapi/v3/song/detail", {"ids": "[$id]", "c": '[{"id":$id}]'});
+    final result = await doRequest("/song/detail", {"ids": "$id", "c": '[{"id":$id}]'});
 
     return _map(result, (result) {
       return result["songs"][0];
@@ -383,7 +389,7 @@ class NeteaseRepository {
     api.Answer result;
     try {
       // convert all params to string
-      final Map<String, String> convertedParams = param.map((k, v) => MapEntry(k.toString(), v.toString()));
+      final Map<String, dynamic> convertedParams = param.map((k, v) => MapEntry(k.toString(), v.toString()));
       result = await api.cloudMusicApi(path, parameter: convertedParams, cookie: await _loadCookies());
     } catch (e, stacktrace) {
       debugPrint("request error : $e \n $stacktrace");

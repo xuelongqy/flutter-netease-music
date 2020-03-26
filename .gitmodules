@@ -7,3 +7,6 @@
 [submodule "music_service"]
 	path = music_service
 	url = https://github.com/boyan01/flutter-music-player
+[submodule "flutter_node"]
+	path = flutter_node
+	url = https://github.com/xuelongqy/flutter_node.git

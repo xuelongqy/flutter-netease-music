@@ -8,6 +8,7 @@ import 'package:quiet/material/app.dart';
 import 'package:quiet/pages/account/account.dart';
 import 'package:quiet/pages/splash/page_splash.dart';
 import 'package:quiet/repository/netease.dart';
+import 'package:quiet/unlock/unlock_server.dart';
 import 'package:scoped_model/scoped_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,6 +26,7 @@ void main() {
     futures: [
       SharedPreferences.getInstance(),
       UserAccount.getPersistenceUser(),
+      UnlockServer.start(),
     ],
     builder: (context, data) {
       final setting = Settings(data[0]);
